@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plant Detector - AI Plant Identification</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --primary: #2ecc71;
+        --primary-dark: #27ae60;
+        --secondary: #3498db;
+        --danger: #e74c3c;
+        --dark: #2c3e50;
+        --light: #ecf0f1;
+        --white: #ffffff;
+        --shadow: rgba(0, 0, 0, 0.1);
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 450px;
+        padding: 20px;
+      }
+
+      .card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 60px var(--shadow);
+        animation: slideUp 0.5s ease;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .logo h1 {
+        color: var(--primary);
+        font-size: 32px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .logo-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--dark);
+        font-weight: 500;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid var(--light);
+        border-radius: 10px;
+        font-size: 15px;
+        transition: all 0.3s;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+
+      .password-wrapper {
+        position: relative;
+      }
+
+      .toggle-password {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        font-size: 20px;
+        color: #95a5a6;
+        user-select: none;
+      }
+
+      .forgot-password {
+        text-align: right;
+        margin-top: 10px;
+      }
+
+      .forgot-password a {
+        color: var(--secondary);
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .forgot-password a:hover {
+        text-decoration: underline;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 10px;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: var(--white);
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+      }
+
+      .btn-secondary {
+        background: var(--secondary);
+        color: var(--white);
+      }
+
+      .btn-secondary:hover {
+        background: #2980b9;
+      }
+
+      .btn-danger {
+        background: var(--danger);
+        color: var(--white);
+      }
+
+      .divider {
+        text-align: center;
+        margin: 25px 0;
+        color: #7f8c8d;
+        position: relative;
+      }
+
+      .divider::before,
+      .divider::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 40%;
+        height: 1px;
+        background: var(--light);
+      }
+
+      .divider::before {
+        left: 0;
+      }
+
+      .divider::after {
+        right: 0;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .app-container {
+        max-width: 1200px;
+        width: 100%;
+        padding: 20px;
+      }
+
+      .navbar {
+        background: var(--white);
+        padding: 15px 30px;
+        border-radius: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 5px 20px var(--shadow);
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .nav-link {
+        padding: 10px 20px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--dark);
+        border-radius: 8px;
+        transition: all 0.3s;
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        background: var(--primary);
+        color: var(--white);
+      }
+
+      .content-area {
+        background: var(--white);
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 5px 20px var(--shadow);
+        min-height: 500px;
+      }
+
+      .upload-section {
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .upload-box {
+        border: 3px dashed var(--primary);
+        border-radius: 15px;
+        padding: 60px 40px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 30px;
+      }
+
+      .upload-box:hover {
+        background: #f0fdf4;
+        border-color: var(--primary-dark);
+      }
+
+      .upload-icon {
+        font-size: 60px;
+        color: var(--primary);
+        margin-bottom: 20px;
+      }
+
+      .image-preview {
+        max-width: 100%;
+        max-height: 300px;
+        margin: 20px auto;
+        border-radius: 10px;
+        display: none;
+      }
+
+      .loader {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        margin: 30px 0;
+      }
+
+      .rotating-leaf {
+        width: 80px;
+        height: 80px;
+        animation: rotate 2s linear infinite;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .result-box {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 30px;
+        margin-top: 30px;
+        display: none;
+        text-align: left;
+      }
+
+      .result-box h3 {
+        color: var(--primary);
+        margin-bottom: 15px;
+      }
+
+      .result-box p {
+        margin: 10px 0;
+        line-height: 1.6;
+      }
+
+      .account-details {
+        display: grid;
+        gap: 20px;
+      }
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px;
+        background: var(--light);
+        border-radius: 10px;
+        align-items: center;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: var(--dark);
+      }
+
+      .history-item {
+        background: var(--light);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .history-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+
+      .settings-option {
+        padding: 20px;
+        background: var(--light);
+        border-radius: 10px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .switch {
+        position: relative;
+        width: 60px;
+        height: 30px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 34px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+
+      input:checked + .slider {
+        background-color: var(--primary);
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(30px);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .stat-card {
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
+        color: var(--white);
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 36px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      @media (max-width: 768px) {
+        .navbar {
+          flex-direction: column;
+        }
+
+        .nav-links {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .content-area {
+          padding: 20px;
+        }
+
+        .upload-box {
+          padding: 40px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Page -->
+    <div id="loginPage" class="container">
+      <div class="card">
+        <div class="logo">
+          <h1>
+            <div class="logo-icon">🌿</div>
+            <span data-lang="appName">PlantDetect</span>
+          </h1>
+        </div>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="loginEmail" data-lang="emailLabel">Email Address</label>
+            <input
+              type="email"
+              id="loginEmail"
+              required
+              data-lang-placeholder="emailPlaceholder"
+            />
+          </div>
+          <div class="form-group">
+            <label for="loginPassword" data-lang="passwordLabel"
+              >Password</label
+            >
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="loginPassword"
+                required
+                data-lang-placeholder="passwordPlaceholder"
+              />
+              <span
+                class="toggle-password"
+                onclick="togglePassword('loginPassword')"
+                >👁️</span
+              >
+            </div>
+            <div class="forgot-password">
+              <a
+                href="#"
+                onclick="showForgotPassword(); return false;"
+                data-lang="forgotPassword"
+                >Forgot Password?</a
+              >
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" data-lang="loginBtn">
+            Login
+          </button>
+          <div class="divider" data-lang="or">OR</div>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="showRegister()"
+            data-lang="registerBtn"
+          >
+            Register New Account
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Register Page -->
+    <div id="registerPage" class="container hidden">
+      <div class="card">
+        <div class="logo">
+          <h1>
+            <div class="logo-icon">🌿</div>
+            <span data-lang="registerTitle">Register</span>
+          </h1>
+        </div>
+        <form id="registerForm">
+          <div class="form-group">
+            <label for="registerName" data-lang="nameLabel">Full Name</label>
+            <input
+              type="text"
+              id="registerName"
+              required
+              data-lang-placeholder="namePlaceholder"
+            />
+          </div>
+          <div class="form-group">
+            <label for="registerEmail" data-lang="emailLabel"
+              >Email Address</label
+            >
+            <input
+              type="email"
+              id="registerEmail"
+              required
+              data-lang-placeholder="emailPlaceholder"
+            />
+          </div>
+          <div class="form-group">
+            <label for="registerPassword" data-lang="passwordLabel"
+              >Password</label
+            >
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="registerPassword"
+                required
+                data-lang-placeholder="createPasswordPlaceholder"
+              />
+              <span
+                class="toggle-password"
+                onclick="togglePassword('registerPassword')"
+                >👁️</span
+              >
+            </div>
+          </div>
+          <div class="form-group">
+            <label
+              for="registerConfirmPassword"
+              data-lang="confirmPasswordLabel"
+              >Confirm Password</label
+            >
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="registerConfirmPassword"
+                required
+                data-lang-placeholder="confirmPasswordPlaceholder"
+              />
+              <span
+                class="toggle-password"
+                onclick="togglePassword('registerConfirmPassword')"
+                >👁️</span
+              >
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            data-lang="registerSubmitBtn"
+          >
+            Register
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="showLogin()"
+            data-lang="backToLogin"
+          >
+            Back to Login
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Forgot Password Page -->
+    <div id="forgotPasswordPage" class="container hidden">
+      <div class="card">
+        <div class="logo">
+          <h1>
+            <div class="logo-icon">🌿</div>
+            <span data-lang="resetPasswordTitle">Reset Password</span>
+          </h1>
+        </div>
+        <form id="forgotPasswordForm">
+          <p
+            style="text-align: center; margin-bottom: 20px; color: #7f8c8d"
+            data-lang="resetPasswordDesc"
+          >
+            Enter your email to receive verification code
+          </p>
+          <div class="form-group">
+            <label for="forgotEmail" data-lang="emailLabel"
+              >Email Address</label
+            >
+            <input
+              type="email"
+              id="forgotEmail"
+              required
+              data-lang-placeholder="emailPlaceholder"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary" data-lang="sendCodeBtn">
+            Send Verification Code
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="showLogin()"
+            data-lang="backToLogin"
+          >
+            Back to Login
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Home Page -->
+    <div id="homePage" class="app-container hidden">
+      <nav class="navbar">
+        <div class="logo">
+          <h1 style="font-size: 24px; margin: 0">
+            🌿 <span data-lang="appName">PlantDetect</span>
+          </h1>
+        </div>
+        <div class="nav-links">
+          <button
+            class="nav-link active"
+            onclick="showSection('home')"
+            data-lang="navHome"
+          >
+            Home
+          </button>
+          <button
+            class="nav-link"
+            onclick="showSection('dashboard')"
+            data-lang="navDashboard"
+          >
+            Dashboard
+          </button>
+          <button
+            class="nav-link"
+            onclick="showSection('history')"
+            data-lang="navHistory"
+          >
+            History
+          </button>
+          <button
+            class="nav-link"
+            onclick="showSection('settings')"
+            data-lang="navSettings"
+          >
+            Settings
+          </button>
+          <button class="nav-link" onclick="logout()" data-lang="navLogout">
+            Logout
+          </button>
+        </div>
+      </nav>
+
+      <!-- Home Section -->
+      <div id="homeSection" class="content-area">
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-number" id="imageCount">0</div>
+            <div data-lang="imagesUploaded">Images Uploaded</div>
+          </div>
+        </div>
+
+        <div class="upload-section">
+          <h2
+            style="color: var(--dark); margin-bottom: 30px"
+            data-lang="uploadTitle"
+          >
+            Upload Plant Image for Detection
+          </h2>
+          <div
+            class="upload-box"
+            onclick="document.getElementById('fileInput').click()"
+          >
+            <div class="upload-icon">📷</div>
+            <h3 data-lang="uploadBoxTitle">Click or Drop Image Here</h3>
+            <p
+              style="color: #7f8c8d; margin-top: 10px"
+              data-lang="uploadBoxDesc"
+            >
+              Supports JPG, PNG formats
+            </p>
+          </div>
+          <input
+            type="file"
+            id="fileInput"
+            accept="image/*"
+            style="display: none"
+            onchange="handleFileSelect(event)"
+          />
+
+          <img id="imagePreview" class="image-preview" alt="Preview" />
+
+          <button
+            id="analyzeBtn"
+            class="btn btn-primary"
+            style="max-width: 300px; margin: 0 auto; display: none"
+            onclick="analyzePlant()"
+            data-lang="analyzeBtn"
+          >
+            Analyze Plant
+          </button>
+
+          <div class="loader" id="loader">
+            <svg class="rotating-leaf" viewBox="0 0 100 100">
+              <path
+                d="M50,10 Q70,30 70,50 Q70,70 50,90 Q30,70 30,50 Q30,30 50,10"
+                fill="#2ecc71"
+              />
+            </svg>
+          </div>
+
+          <div class="result-box" id="resultBox">
+            <h3 data-lang="resultTitle">Analysis Result</h3>
+            <div id="resultContent">
+              <p>
+                <strong data-lang="plantNameLabel">Plant Name:</strong>
+                <span id="plantName">-</span>
+              </p>
+              <p>
+                <strong data-lang="scientificNameLabel"
+                  >Scientific Name:</strong
+                >
+                <span id="scientificName">-</span>
+              </p>
+              <p>
+                <strong data-lang="confidenceLabel">Confidence:</strong>
+                <span id="confidence">-</span>
+              </p>
+              <p>
+                <strong data-lang="descriptionLabel">Description:</strong>
+                <span id="description">-</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Section -->
+      <div id="dashboardSection" class="content-area hidden">
+        <h2 style="margin-bottom: 30px" data-lang="myAccount">My Account</h2>
+        <div class="account-details">
+          <div class="detail-row">
+            <span class="detail-label" data-lang="nameLabel">Name:</span>
+            <span id="accountName">John Doe</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label" data-lang="phoneLabel">Phone:</span>
+            <input
+              type="tel"
+              id="accountPhone"
+              placeholder="+1234567890"
+              style="
+                border: none;
+                background: transparent;
+                text-align: right;
+                width: auto;
+              "
+            />
+          </div>
+          <div class="detail-row">
+            <span class="detail-label" data-lang="emailLabel">Email:</span>
+            <span id="accountEmail">user@example.com</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label" data-lang="dobLabel"
+              >Date of Birth:</span
+            >
+            <input
+              type="date"
+              id="accountDob"
+              style="
+                border: none;
+                background: transparent;
+                text-align: right;
+                width: auto;
+              "
+            />
+          </div>
+          <div class="detail-row">
+            <span class="detail-label" data-lang="dateJoinedLabel"
+              >Date Joined:</span
+            >
+            <span id="dateJoined">January 1, 2024</span>
+          </div>
+        </div>
+        <button
+          class="btn btn-primary"
+          style="margin-top: 20px; max-width: 200px"
+          onclick="saveAccountDetails()"
+          data-lang="saveChangesBtn"
+        >
+          Save Changes
+        </button>
+        <button
+          class="btn btn-danger"
+          style="margin-top: 20px; max-width: 200px"
+          onclick="deleteAccount()"
+          data-lang="deleteAccountBtn"
+        >
+          Delete Account
+        </button>
+      </div>
+
+      <!-- History Section -->
+      <div id="historySection" class="content-area hidden">
+        <h2 style="margin-bottom: 30px" data-lang="historyTitle">
+          Analysis History
+        </h2>
+        <div id="historyList">
+          <p style="text-align: center; color: #7f8c8d" data-lang="noHistory">
+            No history available. Start analyzing plants!
+          </p>
+        </div>
+      </div>
+
+      <!-- Settings Section -->
+      <div id="settingsSection" class="content-area hidden">
+        <h2 style="margin-bottom: 30px" data-lang="settingsTitle">Settings</h2>
+        <div class="settings-option">
+          <div>
+            <strong data-lang="notificationsLabel">Notifications</strong>
+            <p
+              style="color: #7f8c8d; font-size: 14px; margin-top: 5px"
+              data-lang="notificationsDesc"
+            >
+              Receive updates and alerts
+            </p>
+          </div>
+          <label class="switch">
+            <input
+              type="checkbox"
+              id="notificationToggle"
+              checked
+              onchange="saveSettings()"
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="settings-option">
+          <div>
+            <strong data-lang="languageLabel">Language</strong>
+            <p
+              style="color: #7f8c8d; font-size: 14px; margin-top: 5px"
+              data-lang="languageDesc"
+            >
+              Choose your preferred language
+            </p>
+          </div>
+          <select id="languageSelect" onchange="changeLanguage()">
+            <option value="en">English</option>
+            <option value="ta">தமிழ் (Tamil)</option>
+            <option value="hi">हिंदी (Hindi)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Multi-language translations
+      const translations = {
+        en: {
+          appName: "PlantDetect",
+          emailLabel: "Email Address",
+          emailPlaceholder: "Enter your email",
+          passwordLabel: "Password",
+          passwordPlaceholder: "Enter your password",
+          forgotPassword: "Forgot Password?",
+          loginBtn: "Login",
+          or: "OR",
+          registerBtn: "Register New Account",
+          registerTitle: "Register",
+          nameLabel: "Full Name",
+          namePlaceholder: "Enter your name",
+          createPasswordPlaceholder: "Create password",
+          confirmPasswordLabel: "Confirm Password",
+          confirmPasswordPlaceholder: "Confirm password",
+          registerSubmitBtn: "Register",
+          backToLogin: "Back to Login",
+          resetPasswordTitle: "Reset Password",
+          resetPasswordDesc: "Enter your email to receive verification code",
+          sendCodeBtn: "Send Verification Code",
+          navHome: "Home",
+          navDashboard: "Dashboard",
+          navHistory: "History",
+          navSettings: "Settings",
+          navLogout: "Logout",
+          imagesUploaded: "Images Uploaded",
+          uploadTitle: "Upload Plant Image for Detection",
+          uploadBoxTitle: "Click or Drop Image Here",
+          uploadBoxDesc: "Supports JPG, PNG formats",
+          analyzeBtn: "Analyze Plant",
+          resultTitle: "Analysis Result",
+          plantNameLabel: "Plant Name:",
+          scientificNameLabel: "Scientific Name:",
+          confidenceLabel: "Confidence:",
+          descriptionLabel: "Description:",
+          myAccount: "My Account",
+          phoneLabel: "Phone:",
+          dobLabel: "Date of Birth:",
+          dateJoinedLabel: "Date Joined:",
+          saveChangesBtn: "Save Changes",
+          deleteAccountBtn: "Delete Account",
+          historyTitle: "Analysis History",
+          noHistory: "No history available. Start analyzing plants!",
+          settingsTitle: "Settings",
+          notificationsLabel: "Notifications",
+          notificationsDesc: "Receive updates and alerts",
+          languageLabel: "Language",
+          languageDesc: "Choose your preferred language",
+          passwordMismatch: "Passwords do not match!",
+          emailExists: "Email already registered!",
+          registrationSuccess: "Registration successful! Please login.",
+          invalidCredentials: "Invalid email or password!",
+          verificationSent: "Verification code sent to",
+          emailNotFound: "Email not found!",
+          accountSaved: "Account details saved successfully!",
+          deleteConfirm:
+            "Are you sure you want to delete your account? This action cannot be undone.",
+          accountDeleted: "Account deleted successfully!",
+        },
+        ta: {
+          appName: "தாவர கண்டறிதல்",
+          emailLabel: "மின்னஞ்சல் முகவரி",
+          emailPlaceholder: "உங்கள் மின்னஞ்சலை உள்ளிடவும்",
+          passwordLabel: "கடவுச்சொல்",
+          passwordPlaceholder: "உங்கள் கடவுச்சொல்லை உள்ளிடவும்",
+          forgotPassword: "கடவுச்சொல்லை மறந்துவிட்டீர்களா?",
+          loginBtn: "உள்நுழை",
+          or: "அல்லது",
+          registerBtn: "புதிய கணக்கை பதிவு செய்யவும்",
+          registerTitle: "பதிவு",
+          nameLabel: "முழு பெயர்",
+          namePlaceholder: "உங்கள் பெயரை உள்ளிடவும்",
+          createPasswordPlaceholder: "கடவுச்சொல்லை உருவாக்கவும்",
+          confirmPasswordLabel: "கடவுச்சொல்லை உறுதிப்படுத்தவும்",
+          confirmPasswordPlaceholder: "கடவுச்சொல்லை உறுதிப்படுத்தவும்",
+          registerSubmitBtn: "பதிவு செய்",
+          backToLogin: "உள்நுழைவுக்கு திரும்பு",
+          resetPasswordTitle: "கடவுச்சொல்லை மீட்டமை",
+          resetPasswordDesc:
+            "சரிபார்ப்பு குறியீட்டைப் பெற உங்கள் மின்னஞ்சலை உள்ளிடவும்",
+          sendCodeBtn: "சரிபார்ப்பு குறியீட்டை அனுப்பவும்",
+          navHome: "முகப்பு",
+          navDashboard: "கட்டுப்பாட்டு பலகை",
+          navHistory: "வரலாறு",
+          navSettings: "அமைப்புகள்",
+          navLogout: "வெளியேறு",
+          imagesUploaded: "படங்கள் பதிவேற்றப்பட்டன",
+          uploadTitle: "கண்டறிதலுக்கு தாவர படத்தை பதிவேற்றவும்",
+          uploadBoxTitle: "இங்கே கிளிக் செய்யவும் அல்லது படத்தை இழுக்கவும்",
+          uploadBoxDesc: "JPG, PNG வடிவங்களை ஆதரிக்கிறது",
+          analyzeBtn: "தாவரத்தை பகுப்பாய்வு செய்",
+          resultTitle: "பகுப்பாய்வு முடிவு",
+          plantNameLabel: "தாவர பெயர்:",
+          scientificNameLabel: "அறிவியல் பெயர்:",
+          confidenceLabel: "நம்பிக்கை:",
+          descriptionLabel: "விளக்கம்:",
+          myAccount: "எனது கணக்கு",
+          phoneLabel: "தொலைபேசி:",
+          dobLabel: "பிறந்த தேதி:",
+          dateJoinedLabel: "சேர்ந்த தேதி:",
+          saveChangesBtn: "மாற்றங்களைச் சேமி",
+          deleteAccountBtn: "கணக்கை நீக்கு",
+          historyTitle: "பகுப்பாய்வு வரலாறு",
+          noHistory:
+            "வரலாறு இல்லை. தாவரங்களை பகுப்பாய்வு செய்யத் தொடங்குங்கள்!",
+          settingsTitle: "அமைப்புகள்",
+          notificationsLabel: "அறிவிப்புகள்",
+          notificationsDesc: "புதுப்பிப்புகள் மற்றும் எச்சரிக்கைகளைப் பெறவும்",
+          languageLabel: "மொழி",
+          languageDesc: "உங்களுக்கு விருப்பமான மொழியைத் தேர்ந்தெடுக்கவும்",
+          passwordMismatch: "கடவுச்சொற்கள் பொருந்தவில்லை!",
+          emailExists: "மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது!",
+          registrationSuccess: "பதிவு வெற்றிகரமாக முடிந்தது! உள்நுழையவும்.",
+          invalidCredentials: "தவறான மின்னஞ்சல் அல்லது கடவுச்சொல்!",
+          verificationSent: "சரிபார்ப்பு குறியீடு அனுப்பப்பட்டது",
+          emailNotFound: "மின்னஞ்சல் கிடைக்கவில்லை!",
+          accountSaved: "கணக்கு விவரங்கள் வெற்றிகரமாகச் சேமிக்கப்பட்டன!",
+          deleteConfirm:
+            "உங்கள் கணக்கை நீக்க விரும்புகிறீர்களா? இந்த செயலை செயல்தவிர்க்க முடியாது.",
+          accountDeleted: "கணக்கு வெற்றிகரமாக நீக்கப்பட்டது!",
+        },
+        hi: {
+          appName: "पौधा पहचान",
+          emailLabel: "ईमेल पता",
+          emailPlaceholder: "अपना ईमेल दर्ज करें",
+          passwordLabel: "पासवर्ड",
+          passwordPlaceholder: "अपना पासवर्ड दर्ज करें",
+          forgotPassword: "पासवर्ड भूल गए?",
+          loginBtn: "लॉगिन",
+          or: "या",
+          registerBtn: "नया खाता पंजीकृत करें",
+          registerTitle: "पंजीकरण",
+          nameLabel: "पूरा नाम",
+          namePlaceholder: "अपना नाम दर्ज करें",
+          createPasswordPlaceholder: "पासवर्ड बनाएं",
+          confirmPasswordLabel: "पासवर्ड की पुष्टि करें",
+          confirmPasswordPlaceholder: "पासवर्ड की पुष्टि करें",
+          registerSubmitBtn: "पंजीकरण करें",
+          backToLogin: "लॉगिन पर वापस जाएं",
+          resetPasswordTitle: "पासवर्ड रीसेट करें",
+          resetPasswordDesc:
+            "सत्यापन कोड प्राप्त करने के लिए अपना ईमेल दर्ज करें",
+          sendCodeBtn: "सत्यापन कोड भेजें",
+          navHome: "होम",
+          navDashboard: "डैशबोर्ड",
+          navHistory: "इतिहास",
+          navSettings: "सेटिंग्स",
+          navLogout: "लॉगआउट",
+          imagesUploaded: "छवियां अपलोड की गईं",
+          uploadTitle: "पहचान के लिए पौधे की छवि अपलोड करें",
+          uploadBoxTitle: "यहां क्लिक करें या छवि को खींचें",
+          uploadBoxDesc: "JPG, PNG प्रारूपों का समर्थन करता है",
+          analyzeBtn: "पौधे का विश्लेषण करें",
+          resultTitle: "विश्लेषण परिणाम",
+          plantNameLabel: "पौधे का नाम:",
+          scientificNameLabel: "वैज्ञानिक नाम:",
+          confidenceLabel: "विश्वास:",
+          descriptionLabel: "विवरण:",
+          myAccount: "मेरा खाता",
+          phoneLabel: "फोन:",
+          dobLabel: "जन्म तिथि:",
+          dateJoinedLabel: "शामिल होने की तिथि:",
+          saveChangesBtn: "परिवर्तन सहेजें",
+          deleteAccountBtn: "खाता हटाएं",
+          historyTitle: "विश्लेषण इतिहास",
+          noHistory: "कोई इतिहास उपलब्ध नहीं है। पौधों का विश्लेषण शुरू करें!",
+          settingsTitle: "सेटिंग्स",
+          notificationsLabel: "सूचनाएं",
+          notificationsDesc: "अपडेट और अलर्ट प्राप्त करें",
+          languageLabel: "भाषा",
+          languageDesc: "अपनी पसंदीदा भाषा चुनें",
+          passwordMismatch: "पासवर्ड मेल नहीं खाते!",
+          emailExists: "ईमेल पहले से पंजीकृत है!",
+          registrationSuccess: "पंजीकरण सफल! कृपया लॉगिन करें।",
+          invalidCredentials: "अमान्य ईमेल या पासवर्ड!",
+          verificationSent: "सत्यापन कोड भेजा गया",
+          emailNotFound: "ईमेल नहीं मिला!",
+          accountSaved: "खाता विवरण सफलतापूर्वक सहेजा गया!",
+          deleteConfirm:
+            "क्या आप वाकई अपना खाता हटाना चाहते हैं? इस क्रिया को पूर्ववत नहीं किया जा सकता।",
+          accountDeleted: "खाता सफलतापूर्वक हटाया गया!",
+        },
+      };
+
+      // Current language
+      let currentLanguage = localStorage.getItem("appLanguage") || "en";
+
+      // Data Management
+      let users = JSON.parse(localStorage.getItem("users") || "[]");
+      let currentUser = JSON.parse(
+        sessionStorage.getItem("currentUser") || "null"
+      );
+      let analyses = JSON.parse(localStorage.getItem("analyses") || "[]");
+
+      // Initialize app
+      if (currentUser) {
+        showHomePage();
+        loadUserData();
+      }
+
+      // Apply saved language on load
+      applyLanguage(currentLanguage);
+
+      // Toggle password visibility
+      function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling;
+        if (input.type === "password") {
+          input.type = "text";
+          icon.textContent = "🙈";
+        } else {
+          input.type = "password";
+          icon.textContent = "👁️";
+        }
+      }
+
+      // Navigation functions
+      function showLogin() {
+        document.getElementById("loginPage").classList.remove("hidden");
+        document.getElementById("registerPage").classList.add("hidden");
+        document.getElementById("forgotPasswordPage").classList.add("hidden");
+      }
+
+      function showRegister() {
+        document.getElementById("loginPage").classList.add("hidden");
+        document.getElementById("registerPage").classList.remove("hidden");
+        document.getElementById("forgotPasswordPage").classList.add("hidden");
+      }
+
+      function showForgotPassword() {
+        document.getElementById("loginPage").classList.add("hidden");
+        document.getElementById("registerPage").classList.add("hidden");
+        document
+          .getElementById("forgotPasswordPage")
+          .classList.remove("hidden");
+      }
+
+      function showHomePage() {
+        document.getElementById("loginPage").classList.add("hidden");
+        document.getElementById("registerPage").classList.add("hidden");
+        document.getElementById("forgotPasswordPage").classList.add("hidden");
+        document.getElementById("homePage").classList.remove("hidden");
+      }
+
+      function showSection(section) {
+        document
+          .querySelectorAll(".nav-link")
+          .forEach((link) => link.classList.remove("active"));
+        event.target.classList.add("active");
+
+        document.getElementById("homeSection").classList.add("hidden");
+        document.getElementById("dashboardSection").classList.add("hidden");
+        document.getElementById("historySection").classList.add("hidden");
+        document.getElementById("settingsSection").classList.add("hidden");
+
+        document.getElementById(section + "Section").classList.remove("hidden");
+      }
+
+      // Language Functions
+      function applyLanguage(lang) {
+        currentLanguage = lang;
+        const trans = translations[lang];
+
+        // Update all elements with data-lang attribute
+        document.querySelectorAll("[data-lang]").forEach((element) => {
+          const key = element.getAttribute("data-lang");
+          if (trans[key]) {
+            element.textContent = trans[key];
+          }
+        });
+
+        // Update placeholders
+        document
+          .querySelectorAll("[data-lang-placeholder]")
+          .forEach((element) => {
+            const key = element.getAttribute("data-lang-placeholder");
+            if (trans[key]) {
+              element.placeholder = trans[key];
+            }
+          });
+
+        // Update language select in settings
+        if (document.getElementById("languageSelect")) {
+          document.getElementById("languageSelect").value = lang;
+        }
+
+        // Save language preference
+        localStorage.setItem("appLanguage", lang);
+      }
+
+      function changeLanguage() {
+        const lang = document.getElementById("languageSelect").value;
+        applyLanguage(lang);
+
+        // Update user settings
+        if (currentUser) {
+          if (!currentUser.settings) {
+            currentUser.settings = {};
+          }
+          currentUser.settings.language = lang;
+
+          const userIndex = users.findIndex((u) => u.id === currentUser.id);
+          if (userIndex !== -1) {
+            users[userIndex] = currentUser;
+            localStorage.setItem("users", JSON.stringify(users));
+            sessionStorage.setItem("currentUser", JSON.stringify(currentUser));
+          }
+        }
+      }
+
+      // Login form
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const email = document.getElementById("loginEmail").value;
+          const password = document.getElementById("loginPassword").value;
+
+          const user = users.find(
+            (u) => u.email === email && u.password === password
+          );
+
+          if (user) {
+            currentUser = user;
+            sessionStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+            // Apply user's saved language
+            if (user.settings && user.settings.language) {
+              applyLanguage(user.settings.language);
+            }
+
+            showHomePage();
+            loadUserData();
+          } else {
+            alert(translations[currentLanguage].invalidCredentials);
+          }
+        });
+
+      // Register form
+      document
+        .getElementById("registerForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const name = document.getElementById("registerName").value;
+          const email = document.getElementById("registerEmail").value;
+          const password = document.getElementById("registerPassword").value;
+          const confirmPassword = document.getElementById(
+            "registerConfirmPassword"
+          ).value;
+
+          if (password !== confirmPassword) {
+            alert(translations[currentLanguage].passwordMismatch);
+            return;
+          }
+
+          if (users.find((u) => u.email === email)) {
+            alert(translations[currentLanguage].emailExists);
+            return;
+          }
+
+          const newUser = {
+            id: Date.now(),
+            name: name,
+            email: email,
+            password: password,
+            phone: "",
+            dob: "",
+            dateJoined: new Date().toLocaleDateString(),
+            settings: {
+              notifications: true,
+              language: currentLanguage,
+            },
+          };
+
+          users.push(newUser);
+          localStorage.setItem("users", JSON.stringify(users));
+
+          alert(translations[currentLanguage].registrationSuccess);
+          showLogin();
+        });
+
+      // Forgot password form
+      document
+        .getElementById("forgotPasswordForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const email = document.getElementById("forgotEmail").value;
+
+          const user = users.find((u) => u.email === email);
+          if (user) {
+            alert(
+              translations[currentLanguage].verificationSent +
+                " " +
+                email +
+                "\n(" +
+                user.password +
+                ")"
+            );
+          } else {
+            alert(translations[currentLanguage].emailNotFound);
+          }
+        });
+
+      // Load user data
+      function loadUserData() {
+        document.getElementById("accountName").textContent = currentUser.name;
+        document.getElementById("accountEmail").textContent = currentUser.email;
+        document.getElementById("accountPhone").value = currentUser.phone || "";
+        document.getElementById("accountDob").value = currentUser.dob || "";
+        document.getElementById("dateJoined").textContent =
+          currentUser.dateJoined;
+
+        document.getElementById("notificationToggle").checked =
+          currentUser.settings?.notifications ?? true;
+
+        if (currentUser.settings && currentUser.settings.language) {
+          applyLanguage(currentUser.settings.language);
+        }
+
+        updateHistory();
+        updateImageCount();
+      }
+
+      // File upload handling
+      function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            document.getElementById("imagePreview").src = e.target.result;
+            document.getElementById("imagePreview").style.display = "block";
+            document.getElementById("analyzeBtn").style.display = "block";
+            document.getElementById("resultBox").style.display = "none";
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      // Analyze plant
+      function analyzePlant() {
+        document.getElementById("analyzeBtn").style.display = "none";
+        document.getElementById("loader").style.display = "flex";
+        document.getElementById("resultBox").style.display = "none";
+
+        // Simulate API processing
+        setTimeout(() => {
+          const plants = {
+            en: [
+              {
+                name: "Rose Plant",
+                scientific: "Rosa rugosa",
+                desc: "A beautiful flowering plant commonly found in gardens.",
+              },
+              {
+                name: "Tulsi (Holy Basil)",
+                scientific: "Ocimum tenuiflorum",
+                desc: "A sacred plant in Hindu culture with medicinal properties.",
+              },
+              {
+                name: "Money Plant",
+                scientific: "Epipremnum aureum",
+                desc: "A popular indoor plant known for air purification.",
+              },
+              {
+                name: "Aloe Vera",
+                scientific: "Aloe barbadensis",
+                desc: "A succulent plant with numerous medicinal uses.",
+              },
+              {
+                name: "Snake Plant",
+                scientific: "Sansevieria trifasciata",
+                desc: "A hardy indoor plant that purifies air.",
+              },
+            ],
+            ta: [
+              {
+                name: "ரோஜா செடி",
+                scientific: "Rosa rugosa",
+                desc: "தோட்டங்களில் பொதுவாகக் காணப்படும் அழகான பூக்கும் செடி.",
+              },
+              {
+                name: "துளசி",
+                scientific: "Ocimum tenuiflorum",
+                desc: "இந்து கலாச்சாரத்தில் மருத்துவ பண்புகளைக் கொண்ட புனித செடி.",
+              },
+              {
+                name: "பணம் செடி",
+                scientific: "Epipremnum aureum",
+                desc: "காற்று சுத்திகரிப்புக்காக அறியப்படும் பிரபலமான உட்புற செடி.",
+              },
+              {
+                name: "கற்றாழை",
+                scientific: "Aloe barbadensis",
+                desc: "பல மருத்துவ பயன்பாடுகளைக் கொண்ட ஒரு சதைப்பற்றுள்ள செடி.",
+              },
+              {
+                name: "பாம்பு செடி",
+                scientific: "Sansevieria trifasciata",
+                desc: "காற்றை சுத்திகரிக்கும் கடினமான உட்புற செடி.",
+              },
+            ],
+            hi: [
+              {
+                name: "गुलाब का पौधा",
+                scientific: "Rosa rugosa",
+                desc: "बगीचों में आमतौर पर पाया जाने वाला एक सुंदर फूल वाला पौधा।",
+              },
+              {
+                name: "तुलसी",
+                scientific: "Ocimum tenuiflorum",
+                desc: "हिंदू संस्कृति में औषधीय गुणों वाला एक पवित्र पौधा।",
+              },
+              {
+                name: "मनी प्लांट",
+                scientific: "Epipremnum aureum",
+                desc: "वायु शुद्धिकरण के लिए जाना जाने वाला एक लोकप्रिय इनडोर पौधा।",
+              },
+              {
+                name: "एलोवेरा",
+                scientific: "Aloe barbadensis",
+                desc: "कई औषधीय उपयोगों वाला एक रसीला पौधा।",
+              },
+              {
+                name: "स्नेक प्लांट",
+                scientific: "Sansevieria trifasciata",
+                desc: "एक मजबूत इनडोर पौधा जो हवा को शुद्ध करता है।",
+              },
+            ],
+          };
+
+          const plantList = plants[currentLanguage] || plants.en;
+          const randomPlant =
+            plantList[Math.floor(Math.random() * plantList.length)];
+          const confidence = (85 + Math.random() * 14).toFixed(1);
+
+          document.getElementById("plantName").textContent = randomPlant.name;
+          document.getElementById("scientificName").textContent =
+            randomPlant.scientific;
+          document.getElementById("confidence").textContent = confidence + "%";
+          document.getElementById("description").textContent = randomPlant.desc;
+
+          // Save analysis
+          const analysis = {
+            id: Date.now(),
+            userId: currentUser.id,
+            image: document.getElementById("imagePreview").src,
+            plantName: randomPlant.name,
+            scientificName: randomPlant.scientific,
+            confidence: confidence,
+            description: randomPlant.desc,
+            date: new Date().toLocaleDateString(),
+            timestamp: Date.now(),
+          };
+
+          analyses.push(analysis);
+          localStorage.setItem("analyses", JSON.stringify(analyses));
+
+          document.getElementById("loader").style.display = "none";
+          document.getElementById("resultBox").style.display = "block";
+
+          updateHistory();
+          updateImageCount();
+        }, 3000);
+      }
+
+      // Update history
+      function updateHistory() {
+        const userAnalyses = analyses.filter(
+          (a) => a.userId === currentUser.id
+        );
+        const historyList = document.getElementById("historyList");
+
+        if (userAnalyses.length > 0) {
+          historyList.innerHTML = userAnalyses
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .map(
+              (item) => `
+                    <div class="history-item">
+                        <img src="${item.image}" class="history-image" alt="Plant">
+                        <div style="flex: 1;">
+                            <strong>${item.plantName}</strong>
+                            <p style="color: #7f8c8d; margin-top: 5px; font-size: 14px;">${item.date}</p>
+                        </div>
+                        <span style="color: var(--primary); font-weight: 600;">${item.confidence}%</span>
+                    </div>
+                `
+            )
+            .join("");
+        } else {
+          historyList.innerHTML = `<p style="text-align: center; color: #7f8c8d;" data-lang="noHistory">${translations[currentLanguage].noHistory}</p>`;
+        }
+      }
+
+      // Update image count
+      function updateImageCount() {
+        const userAnalyses = analyses.filter(
+          (a) => a.userId === currentUser.id
+        );
+        document.getElementById("imageCount").textContent = userAnalyses.length;
+      }
+
+      // Save account details
+      function saveAccountDetails() {
+        currentUser.phone = document.getElementById("accountPhone").value;
+        currentUser.dob = document.getElementById("accountDob").value;
+
+        const userIndex = users.findIndex((u) => u.id === currentUser.id);
+        if (userIndex !== -1) {
+          users[userIndex] = currentUser;
+          localStorage.setItem("users", JSON.stringify(users));
+          sessionStorage.setItem("currentUser", JSON.stringify(currentUser));
+          alert(translations[currentLanguage].accountSaved);
+        }
+      }
+
+      // Save settings
+      function saveSettings() {
+        if (!currentUser.settings) {
+          currentUser.settings = {};
+        }
+        currentUser.settings.notifications =
+          document.getElementById("notificationToggle").checked;
+
+        const userIndex = users.findIndex((u) => u.id === currentUser.id);
+        if (userIndex !== -1) {
+          users[userIndex] = currentUser;
+          localStorage.setItem("users", JSON.stringify(users));
+          sessionStorage.setItem("currentUser", JSON.stringify(currentUser));
+        }
+      }
+
+      // Delete account
+      function deleteAccount() {
+        if (confirm(translations[currentLanguage].deleteConfirm)) {
+          users = users.filter((u) => u.id !== currentUser.id);
+          localStorage.setItem("users", JSON.stringify(users));
+
+          analyses = analyses.filter((a) => a.userId !== currentUser.id);
+          localStorage.setItem("analyses", JSON.stringify(analyses));
+
+          logout();
+          alert(translations[currentLanguage].accountDeleted);
+        }
+      }
+
+      // Logout
+      function logout() {
+        currentUser = null;
+        sessionStorage.removeItem("currentUser");
+        document.getElementById("homePage").classList.add("hidden");
+        showLogin();
+        document.getElementById("loginForm").reset();
+
+        document.getElementById("imagePreview").style.display = "none";
+        document.getElementById("analyzeBtn").style.display = "none";
+        document.getElementById("resultBox").style.display = "none";
+      }
+
+      // Drag and drop support
+      const uploadBox = document.querySelector(".upload-box");
+
+      if (uploadBox) {
+        uploadBox.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          uploadBox.style.background = "#f0fdf4";
+        });
+
+        uploadBox.addEventListener("dragleave", () => {
+          uploadBox.style.background = "";
+        });
+
+        uploadBox.addEventListener("drop", (e) => {
+          e.preventDefault();
+          uploadBox.style.background = "";
+
+          const file = e.dataTransfer.files[0];
+          if (file && file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+              document.getElementById("imagePreview").src = event.target.result;
+              document.getElementById("imagePreview").style.display = "block";
+              document.getElementById("analyzeBtn").style.display = "block";
+              document.getElementById("resultBox").style.display = "none";
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
