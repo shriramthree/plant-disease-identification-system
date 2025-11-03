@@ -84,7 +84,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 p-4 sm:p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-gray-100 text-gray-800 p-4 sm:p-8 flex flex-col items-center justify-start">
       <div className="w-full max-w-5xl">
         <header className="text-center mb-8">
           <div className="inline-flex items-center gap-3">
