@@ -1,58 +1,92 @@
 import streamlit as st
 import tensorflow as tf
 import numpy as np
+import gdown
+import os
 from PIL import Image
 import cv2
 
-# -------------------------------
-# 🧠 Load your trained model
-# -------------------------------
+# -----------------------------
+# CONFIGURATION
+# -----------------------------
+# Google Drive link for your model (.h5 file)
+# Example: https://drive.google.com/file/d/1AbCdEfGhIjKlMn/view?usp=sharing
+# Replace the ID below with your actual file ID
+GOOGLE_DRIVE_FILE_ID = "YOUR_FILE_ID_HERE"
+
+MODEL_PATH = "plant_disease_model.h5"
+
+# -----------------------------
+# DOWNLOAD MODEL IF NOT PRESENT
+# -----------------------------
+def download_model():
+    if not os.path.exists(MODEL_PATH):
+        st.info("📥 Downloading model from Google Drive...")
+        try:
+            gdown.download(
+                f"https://drive.google.com/uc?id={GOOGLE_DRIVE_FILE_ID}",
+                MODEL_PATH,
+                quiet=False
+            )
+            st.success("✅ Model downloaded successfully!")
+        except Exception as e:
+            st.error(f"❌ Failed to download model: {e}")
+
+# -----------------------------
+# LOAD MODEL
+# -----------------------------
 @st.cache_resource
 def load_model():
-    model = tf.keras.models.load_model("plant_disease_model.h5")
+    download_model()
+    model = tf.keras.models.load_model(MODEL_PATH)
     return model
 
 model = load_model()
 
-# -------------------------------
-# ⚙️ Define helper: preprocess image
-# -------------------------------
-def preprocess_image(img):
-    img = img.resize((128, 128))  # resize to your model's input size
-    img_array = np.array(img)
-    img_array = img_array / 255.0  # normalize
-    img_array = np.expand_dims(img_array, axis=0)
-    return img_array
+# -----------------------------
+# CLASS LABELS
+# -----------------------------
+class_names = [
+    "Apple___Black_rot",
+    "Apple___Healthy",
+    "Corn___Common_rust",
+    "Corn___Gray_leaf_spot",
+    "Corn___Healthy",
+    "Potato___Early_blight",
+    "Potato___Healthy",
+    "Potato___Late_blight",
+    "Tomato___Bacterial_spot",
+    "Tomato___Early_blight",
+    "Tomato___Healthy",
+    "Tomato___Late_blight"
+]
 
-# -------------------------------
-# 🌿 Streamlit UI
-# -------------------------------
-st.set_page_config(page_title="Plant Leaf Disease Identification", layout="centered")
-st.title("🌱 Plant Leaf Disease Identification")
-st.write("Upload a leaf image to predict the disease using a trained CNN model.")
+# -----------------------------
+# STREAMLIT UI
+# -----------------------------
+st.title("🌿 Plant Leaf Disease Identification System")
+st.markdown("Upload a leaf image to predict the disease using a trained CNN model.")
 
-uploaded_file = st.file_uploader("Upload a leaf image...", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("📤 Upload a leaf image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Display image
+    # Read and display image
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Leaf", use_column_width=True)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
+    
+    # Convert image for model
+    img = np.array(image)
+    img = cv2.resize(img, (224, 224))  # adjust to your training input size
+    img = img / 255.0
+    img = np.expand_dims(img, axis=0)
+    
+    # Prediction
+    with st.spinner("🔍 Identifying disease..."):
+        predictions = model.predict(img)
+        predicted_class = np.argmax(predictions, axis=1)[0]
+        result = class_names[predicted_class] if predicted_class < len(class_names) else "Unknown"
 
-    # Preprocess
-    st.write("Analyzing image...")
-    processed_image = preprocess_image(image)
-
-    # Predict
-    prediction = model.predict(processed_image)
-    predicted_class = np.argmax(prediction, axis=1)[0]
-
-    # Replace this list with your real class names
-    class_names = ["Apple___Black_rot", "Apple___Healthy", "Corn___Common_rust", "Corn___Healthy"]
-    result = class_names[predicted_class] if predicted_class < len(class_names) else "Unknown"
-
-    # Display result
-    st.success(f"✅ Predicted Disease: **{result}**")
+    st.success(f"🌱 **Predicted Disease:** {result}")
 
 st.markdown("---")
-st.markdown("👨‍🔬 *Built using Streamlit and TensorFlow*")
-
+st.caption("🚀 Built with Streamlit & TensorFlow | Deployed on Streamlit Cloud")
