@@ -6,3 +6,11 @@ export interface DiseasePrediction {
   possibleCauses: string[];
   suggestedTreatments: string[];
 }
+
+export interface HistoryEntry {
+  id: string;
+  plantName: string;
+  thumbnailUrl: string;
+  date: string;
+  reportMarkdown: string;
+}

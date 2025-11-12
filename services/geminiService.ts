@@ -1,14 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  throw new Error("API_KEY environment variable not set");
+function getAiInstance() {
+  const API_KEY = process.env.API_KEY;
+  if (!API_KEY) {
+    throw new Error("API key is not configured for this application.");
+  }
+  return new GoogleGenAI({ apiKey: API_KEY });
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY });
-
-const model = 'gemini-2.5-flash';
+const textModel = 'gemini-2.5-pro';
+const imageModel = 'imagen-4.0-generate-001';
 
 export async function identifyDisease(
   imageBase64: string,
@@ -40,15 +41,24 @@ Analyze the image and generate a markdown-formatted report with the following st
    - <If healthy, provide general plant care tips instead of treatment details.>
 
 **4. Model Evaluation Summary**
-   - <A brief, one-paragraph statement about the analysis. Mention that this is an AI-generated result and should be used for informational purposes. Advise consulting a professional for critical decisions and that pesticide regulations vary by location.>
+   - <A brief, one-paragraph statement about the analysis. Mention that this is an AI-generated result and should be for informational purposes. Advise consulting a professional for critical decisions and that pesticide regulations vary by location.>
+
+**5. Environmental Impact Estimate**
+   - **Estimated CO2e:** <Provide a very rough estimate in grams of CO2 equivalent for this specific analysis. e.g., "Less than 0.1g CO2e".>
+   - **Note:** <Include a brief note that this AI model runs on Google's data centers, which are committed to carbon neutrality, significantly minimizing the environmental impact.>
+
+**6. API Usage Estimate**
+   - **Estimated Input Tokens:** <Provide a rough estimate of the number of tokens in the input prompt and image.>
+   - **Estimated Output Tokens:** <Provide a rough estimate of the number of tokens in this generated report.>
 
 ---
 
 Generate ONLY the markdown report based on this template. Do not include any other text or explanations before or after the report.`;
 
   try {
+    const ai = getAiInstance();
     const response = await ai.models.generateContent({
-      model: model,
+      model: textModel,
       contents: {
         parts: [
           {
@@ -70,5 +80,30 @@ Generate ONLY the markdown report based on this template. Do not include any oth
         throw new Error(`Failed to analyze image: ${error.message}`);
     }
     throw new Error("An unknown error occurred while analyzing the image.");
+  }
+}
+
+export async function generateImageFromPrompt(prompt: string): Promise<string> {
+  try {
+    const ai = getAiInstance();
+    const response = await ai.models.generateImages({
+      model: imageModel,
+      prompt: prompt,
+      config: {
+        numberOfImages: 1,
+        outputMimeType: 'image/png',
+        aspectRatio: '1:1',
+      },
+    });
+
+    const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
+    return `data:image/png;base64,${base64ImageBytes}`;
+
+  } catch (error) {
+    console.error("Error calling Gemini API for image generation:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to generate image: ${error.message}`);
+    }
+    throw new Error("An unknown error occurred while generating the image.");
   }
 }

@@ -1,4 +1,79 @@
-function renderReportContent(markdown: string): string {
+export interface ParsedReportData {
+    plantType: string;
+    detectedDisease: string;
+    confidenceScore: string;
+    estimatedCO2e: string;
+    estimatedInputTokens: string;
+    estimatedOutputTokens: string;
+}
+
+const parseField = (markdown: string, fieldName: string): string => {
+    const regex = new RegExp(`\\*\\*${fieldName}:\\*\\*\\s*(.*)`);
+    const match = markdown.match(regex);
+    return match ? match[1].trim() : "N/A";
+};
+
+export function parseReportMarkdown(markdown: string): ParsedReportData {
+    return {
+        plantType: parseField(markdown, "Plant Type"),
+        detectedDisease: parseField(markdown, "Detected Disease"),
+        confidenceScore: parseField(markdown, "Confidence Score"),
+        estimatedCO2e: parseField(markdown, "Estimated CO2e"),
+        estimatedInputTokens: parseField(markdown, "Estimated Input Tokens"),
+        estimatedOutputTokens: parseField(markdown, "Estimated Output Tokens"),
+    };
+}
+
+export function generateReportCsv(markdown: string) {
+    const data = parseReportMarkdown(markdown);
+    
+    const headers = [
+        "Analysis Date",
+        "Plant Type",
+        "Detected Disease",
+        "Confidence Score",
+        "Estimated CO2e (g)",
+        "Estimated Input Tokens",
+        "Estimated Output Tokens"
+    ];
+
+    const cleanedCO2e = data.estimatedCO2e.replace(/g CO2e/i, '').replace(/less than/i, '<').trim();
+
+    const rows = [
+        new Date().toISOString(),
+        data.plantType,
+        data.detectedDisease,
+        data.confidenceScore,
+        cleanedCO2e,
+        data.estimatedInputTokens,
+        data.estimatedOutputTokens
+    ];
+
+    const escapeCsvField = (field: string) => {
+        if (/[",\n\r]/.test(field)) {
+            return `"${field.replace(/"/g, '""')}"`;
+        }
+        return field;
+    };
+
+    const csvContent = [
+        headers.map(escapeCsvField).join(','),
+        rows.map(escapeCsvField).join(',')
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    const filename = `plant-report-${new Date().toISOString().split('T')[0]}.csv`;
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+export function renderReportContent(markdown: string): string {
     const escapeHtml = (unsafe: string) => 
         unsafe
          .replace(/&/g, "&amp;")
@@ -52,7 +127,7 @@ function renderReportContent(markdown: string): string {
         
         if (trimmedBlock.match(/^\*\*(.*?)\*\*$/)) {
             const headerText = trimmedBlock.substring(2, trimmedBlock.length - 2);
-            processedHtml.push(`<h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">${escapeHtml(headerText)}</h2>`);
+            processedHtml.push(`<h2 class="font-bold text-gray-800 mt-8 mb-4">${escapeHtml(headerText)}</h2>`);
         } 
         else if (trimmedBlock === '---') {
             processedHtml.push('<hr class="my-6 border-gray-200">');
@@ -75,8 +150,14 @@ function renderReportContent(markdown: string): string {
 }
 
 
-export function generateReportHtml(reportMarkdown: string, imageUrl: string): string {
+export function generateReportHtml(reportMarkdown: string, imageUrl: string | null): string {
   const reportContent = renderReportContent(reportMarkdown);
+
+  const imageElement = imageUrl 
+    ? `<div class="w-32 h-32 sm:w-40 sm:h-40 ml-auto sm:ml-0 flex-shrink-0 order-first sm:order-last">
+         <img src="${imageUrl}" alt="Uploaded Leaf Image" class="w-full h-full object-cover rounded-md border-2 border-gray-300" title="Uploaded Leaf">
+       </div>`
+    : '';
 
   return `
   <!DOCTYPE html>
@@ -111,7 +192,7 @@ export function generateReportHtml(reportMarkdown: string, imageUrl: string): st
           padding: 0;
         }
         .printable-area {
-          box-shadow: none !important;
+          box-shadow: none !import ant;
           margin: 0;
           max-width: 100%;
           border-radius: 0;
@@ -135,11 +216,9 @@ export function generateReportHtml(reportMarkdown: string, imageUrl: string): st
               <div>
                 <h1 class="text-3xl font-bold text-green-600">Plant Disease Diagnostic Report</h1>
               </div>
-              <div class="w-32 h-32 sm:w-40 sm:h-40 ml-auto sm:ml-0 flex-shrink-0 order-first sm:order-last">
-                <img src="${imageUrl}" alt="Uploaded Leaf Image" class="w-full h-full object-cover rounded-md border-2 border-gray-300" title="Uploaded Leaf">
-              </div>
+              ${imageElement}
             </header>
-            <main class="text-base sm:text-lg leading-relaxed font-sans">
+            <main class="text-lg leading-relaxed font-sans">
               ${reportContent}
             </main>
           </div>
