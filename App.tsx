@@ -234,7 +234,7 @@ function App() {
           <div className="inline-flex items-center gap-3">
             <LeafIcon className="w-10 h-10 text-green-600" />
             <h1 className="text-4xl font-bold text-gray-800 tracking-tight">
-              AI Agricultural Assistant
+              Plant Leaf Disease Analysis
             </h1>
           </div>
           <p className="mt-2 text-gray-600">

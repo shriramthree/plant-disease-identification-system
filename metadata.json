@@ -1,5 +1,5 @@
 {
-  "name": "Leaf Disease Identifier",
+  "name": "Plant Leaf Disease Analysis",
   "description": "An AI-powered web application to identify plant leaf diseases by uploading an image. Get instant diagnosis, confidence scores, and treatment suggestions.",
   "requestFramePermissions": [
     "camera",
